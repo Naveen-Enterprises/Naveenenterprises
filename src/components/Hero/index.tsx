@@ -487,6 +487,7 @@ const Hero = () => {
           >
             Naveen Enterprises specializes in{" "}
             <CyclingSpecialization
+
               texts={[
                 "Artifical Intelligence",
                 "Large Language Models",
@@ -495,8 +496,7 @@ const Hero = () => {
                 "Secure Web Development",
                 "Global Software Consulting",
               ]}
-              duration={2000}
-            />{" "}
+            />
             and also engages in import and export of premium products and tech
             solutions worldwide.
           </motion.p>
