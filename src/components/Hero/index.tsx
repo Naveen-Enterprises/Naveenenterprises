@@ -9,23 +9,119 @@ interface ThemeProps {
   isDark: boolean;
 }
 
-/* ---------------------------- Typewriter Component --------------------------- */
-const Typewriter = ({ text, speed = 50 }: { text: string; speed?: number }) => {
+/* ---------------------- CyclingSpecialization Component ---------------------- */
+const CyclingSpecialization = ({
+  texts,
+  typingSpeed = 300,
+  pauseDuration = 2000,
+}: {
+  texts: string[];
+  typingSpeed?: number;
+  pauseDuration?: number;
+}) => {
+  const [textIndex, setTextIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [minWidth, setMinWidth] = useState<number>(0);
+
+  // Measure and set a constant width based on the widest text item
   useEffect(() => {
-    let index = 0;
-    const interval = setInterval(() => {
-      setDisplayedText((prev) => prev + text.charAt(index));
-      index++;
-      if (index === text.length) clearInterval(interval);
-    }, speed);
-    return () => clearInterval(interval);
-  }, [text, speed]);
+    const measureWidth = () => {
+      if (!containerRef.current) return;
+      const computedFont = getComputedStyle(containerRef.current).font;
+      const widths = texts.map((text) => {
+        const span = document.createElement("span");
+        span.style.position = "absolute";
+        span.style.whiteSpace = "nowrap";
+        span.style.visibility = "hidden";
+        span.style.font = computedFont;
+        span.textContent = text;
+        document.body.appendChild(span);
+        const width = span.getBoundingClientRect().width;
+        document.body.removeChild(span);
+        return width;
+      });
+      setMinWidth(Math.ceil(Math.max(...widths)));
+    };
+    measureWidth();
+  }, [texts]);
+
+  // Typewriter effect: add one letter at a time, then pause and clear for the next text
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const currentText = texts[textIndex];
+
+    if (displayedText.length < currentText.length) {
+      timeout = setTimeout(() => {
+        setDisplayedText(currentText.slice(0, displayedText.length + 1));
+      }, typingSpeed);
+    } else {
+      timeout = setTimeout(() => {
+        setDisplayedText("");
+        setTextIndex((prev) => (prev + 1) % texts.length);
+      }, pauseDuration);
+    }
+    return () => clearTimeout(timeout);
+  }, [displayedText, textIndex, texts, typingSpeed, pauseDuration]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ minWidth, display: "inline-block" }}
+      className="px-1 py-0"
+    >
+      <span>{displayedText}</span>
+      <span
+        style={{
+          display: "inline-block",
+          width: "1ch",
+          animation: "blink 1s step-start infinite",
+        }}
+      >
+        |
+      </span>
+    </div>
+  );
+};
+
+/* ---------------------- CyclingTypewriter Component ---------------------- */
+// unchanged if still needed elsewhere
+const CyclingTypewriter = ({
+  texts,
+  typingSpeed = 100,
+  pauseDuration = 2000,
+}: {
+  texts: string[];
+  typingSpeed?: number;
+  pauseDuration?: number;
+}) => {
+  const [textIndex, setTextIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const currentText = texts[textIndex];
+
+    if (displayedText.length < currentText.length) {
+      timeout = setTimeout(() => {
+        setDisplayedText(currentText.slice(0, displayedText.length + 1));
+      }, typingSpeed);
+    } else {
+      timeout = setTimeout(() => {
+        setDisplayedText("");
+        setTextIndex((prev) => (prev + 1) % texts.length);
+      }, pauseDuration);
+    }
+    return () => clearTimeout(timeout);
+  }, [displayedText, textIndex, texts, typingSpeed, pauseDuration]);
 
   return <span>{displayedText}</span>;
 };
 
-/* ------------------------- Particle Background ------------------------- */
+/* ------------------------- Other Components ------------------------- */
+// ParticlesBackground, AnimatedGradient, GlowingOverlay, FloatingElements,
+// MouseDot, BrandedSymbol remain unchanged.
+
 const ParticlesBackground = ({ isDark }: ThemeProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -97,7 +193,6 @@ const ParticlesBackground = ({ isDark }: ThemeProps) => {
   return <canvas ref={canvasRef} className="absolute inset-0 -z-50" />;
 };
 
-/* ---------------------- Animated Gradient Background --------------------- */
 const AnimatedGradient = ({ isDark }: ThemeProps) => {
   const background = isDark
     ? "linear-gradient(270deg, #1e3c72, #2a5298, #4a6cf7, #2a5298)"
@@ -116,7 +211,6 @@ const AnimatedGradient = ({ isDark }: ThemeProps) => {
   );
 };
 
-/* ------------------------ Glowing SVG Overlays --------------------------- */
 const GlowingOverlay = ({ isDark }: ThemeProps) => (
   <>
     <motion.svg
@@ -186,7 +280,6 @@ const GlowingOverlay = ({ isDark }: ThemeProps) => (
   </>
 );
 
-/* ----------------------------- Floating Elements ------------------------- */
 const FloatingElements = ({ isDark }: ThemeProps) => (
   <>
     <motion.div
@@ -232,7 +325,6 @@ const FloatingElements = ({ isDark }: ThemeProps) => (
   </>
 );
 
-/* ----------------------------- Mouse Dot ------------------------- */
 const MouseDot = ({ isDark }: ThemeProps) => {
   const dotRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number | null>(null);
@@ -274,7 +366,6 @@ const MouseDot = ({ isDark }: ThemeProps) => {
   );
 };
 
-/* ------------------------- Branded Symbol Animation ------------------------- */
 const BrandedSymbol = ({ isDark }: ThemeProps) => (
   <motion.svg
     className="absolute inset-0 -z-60 opacity-20 pointer-events-none"
@@ -372,7 +463,6 @@ const Hero = () => {
         <BrandedSymbol isDark={isDark} />
 
         <div className="relative z-40 max-w-4xl px-6 text-center mt-24">
-          {/* Wrap heading in a container with perspective */}
           <div style={{ perspective: "1000px" }}>
             <motion.h1
               initial={{ clipPath: "inset(0 100% 0 0)" }}
@@ -395,10 +485,20 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.2, duration: 1.8 }}
           >
-            <Typewriter
-              text="Naveen Enterprises specializes in AI, LLMs, cybersecurity, secure web development, and global software consulting. We also engage in import and export of premium products and tech solutions worldwide."
-              speed={50}
-            />
+            Naveen Enterprises specializes in{" "}
+            <CyclingSpecialization
+              texts={[
+                "Artifical Intelligence",
+                "Large Language Models",
+                "Web & Mobile Applications",
+                "Cybersecurity",
+                "Secure Web Development",
+                "Global Software Consulting",
+              ]}
+              duration={2000}
+            />{" "}
+            and also engages in import and export of premium products and tech
+            solutions worldwide.
           </motion.p>
           <div className="mt-12">
             <Link
