@@ -11,8 +11,8 @@ import Testimonials from "@/components/Testimonials";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free Next.js Template for Startup and SaaS",
-  description: "This is Home for Startup Nextjs Template",
+  title: "Naveen Enterprises | AI, Secure Software & Global Trade Solutions",
+  description: "Naveen Enterprises builds smart, secure tech solutions using AI and web development, and facilitates global trade through import/export services.",
   // other metadata
 };
 
